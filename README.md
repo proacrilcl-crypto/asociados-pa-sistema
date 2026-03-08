@@ -1,1 +1,0 @@
-Sube index.html y vercel.json a tu repositorio y haz redeploy en Vercel.
