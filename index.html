@@ -1,0 +1,52 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Asociados P&A</title>
+<style>
+body{font-family:Arial;background:#f5f5f5;display:flex;align-items:center;justify-content:center;height:100vh}
+.card{background:white;padding:30px;border-radius:10px;box-shadow:0 5px 15px rgba(0,0,0,0.1);width:320px}
+input{width:100%;padding:10px;margin:8px 0;border:1px solid #ccc;border-radius:6px}
+button{width:100%;padding:10px;background:#2d6cdf;color:white;border:none;border-radius:6px;cursor:pointer}
+#msg{margin-top:10px;font-size:14px;color:#444}
+</style>
+</head>
+<body>
+
+<div class="card">
+<h2>Asociados P&A</h2>
+<input id="email" placeholder="Correo">
+<input id="pass" type="password" placeholder="Contraseña">
+<button onclick="login()">Ingresar</button>
+<div id="msg"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "REEMPLAZAR_API_KEY",
+  authDomain: "REEMPLAZAR.firebaseapp.com",
+  projectId: "REEMPLAZAR"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+function login(){
+ const email=document.getElementById("email").value;
+ const pass=document.getElementById("pass").value;
+
+ firebase.auth().signInWithEmailAndPassword(email,pass)
+ .then(()=>{
+   document.getElementById("msg").innerText="Login correcto";
+ })
+ .catch(e=>{
+   document.getElementById("msg").innerText=e.message;
+ });
+}
+</script>
+
+</body>
+</html>
