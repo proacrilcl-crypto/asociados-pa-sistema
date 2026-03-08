@@ -30,7 +30,8 @@
     .admin-only-page.hidden-by-role,.admin-only.hidden-by-role{display:none!important}.hint{font-size:12px;color:var(--muted);margin-top:-6px}
     @media(max-width:720px){.app{display:block}.sidebar{width:auto}.content{padding:16px}.cards.two{grid-template-columns:1fr}}
   </style>
-
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script type="module">
     // === CONFIGURACIÓN FIREBASE ===
     // Reemplaza estos valores por los de tu proyecto Firebase.
@@ -329,9 +330,6 @@ function pedidoMatchesFilters(p){
   if (cliente && !p.cliente.toLowerCase().includes(cliente)) return false;
   return true;
 }
-function getEstadoOptions(selected){
-  return ALL_STATES.map(estado => `<option value="${estado}" ${estado === selected ? 'selected' : ''}>${estado}</option>`).join('');
-}
 function renderPedidos(){
   $('tablaPedidos').innerHTML = pedidos.filter(pedidoMatchesFilters).sort((a,b)=>b.numeroPedido-a.numeroPedido).map(p => {
     const locked = LOCKED_STATES.includes(p.estado);
@@ -342,15 +340,7 @@ function renderPedidos(){
       <td>${money(p.total)}</td>
       <td>${money(p.abono)}</td>
       <td>${money(p.saldo)}</td>
-      <td>
-        <span class="badge">${p.estado}</span>
-        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-          <select class="pedido-estado-select" data-id="${p.id}" ${locked?'disabled':''} style="min-width:150px;padding:8px;border-radius:10px;">
-            ${getEstadoOptions(p.estado)}
-          </select>
-          <button data-id="${p.id}" class="btn-update-estado secondary" ${locked?'disabled':''}>Actualizar</button>
-        </div>
-      </td>
+      <td><span class="badge">${p.estado}</span></td>
       <td>${p.tipoEntrega}</td>
       <td>${p.fechaEntrega}</td>
       <td><div class="action-group">
@@ -363,11 +353,6 @@ function renderPedidos(){
   document.querySelectorAll('.btn-edit').forEach(b => b.onclick = () => editPedido(b.dataset.id));
   document.querySelectorAll('.btn-delete').forEach(b => b.onclick = () => removePedido(b.dataset.id));
   document.querySelectorAll('.btn-pdf').forEach(b => b.onclick = () => downloadOrdenTrabajo(b.dataset.id));
-  document.querySelectorAll('.btn-update-estado').forEach(b => b.onclick = () => {
-    const select = document.querySelector(`.pedido-estado-select[data-id="${b.dataset.id}"]`);
-    if (!select) return;
-    quickUpdatePedidoEstado(b.dataset.id, select.value);
-  });
 }
 function renderGastos(){
   if (!isAdmin){ $('tablaGastos').innerHTML = '<tr><td colspan="5">Solo administrador</td></tr>'; return; }
@@ -436,23 +421,6 @@ async function removePedido(id){
   await deleteDoc(doc(db,'pedidos',id));
   await loadAllFromCloud();
   setStatus('Pedido eliminado.','ok');
-}
-async function quickUpdatePedidoEstado(id, nuevoEstado){
-  const pedido = pedidos.find(x => x.id === id);
-  if (!pedido) return;
-  if (!cloudReady){ setStatus('Falta conectar Firebase para guardar en la nube.', 'warn'); return; }
-  if (LOCKED_STATES.includes(pedido.estado)){ setStatus('Ese pedido ya está finalizado y no puede cambiarse desde aquí.','bad'); return; }
-  if (pedido.estado === nuevoEstado){ setStatus('Ese pedido ya tiene ese estado.','warn'); return; }
-
-  const payload = { estado: nuevoEstado };
-  if (FINAL_STATES.includes(nuevoEstado)) {
-    payload.abono = 0;
-    payload.saldo = 0;
-  }
-
-  await updateDoc(doc(db,'pedidos',id), payload);
-  await loadAllFromCloud();
-  setStatus(`Estado actualizado a ${nuevoEstado}.`, 'ok');
 }
 function resetGastoForm(){ $('gastoForm').reset(); $('gastoDocId').value=''; $('gastoFecha').value=today(); $('gastoMonto').value=0; $('btnCancelarGasto').classList.add('hidden'); }
 async function saveGasto(e){
