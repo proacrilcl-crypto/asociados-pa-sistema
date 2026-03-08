@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asociados P&A</title>
+<style>
+body{font-family:Arial;margin:0;background:#f4f4f4}
+.hidden{display:none}
+.sidebar{width:220px;height:100vh;background:#1e293b;color:white;position:fixed;padding:20px}
+.sidebar button{width:100%;margin:8px 0;padding:10px;border:none;background:#334155;color:white;cursor:pointer;border-radius:6px}
+.content{margin-left:240px;padding:30px}
+.login{display:flex;height:100vh;align-items:center;justify-content:center}
+.login-box{background:white;padding:30px;border-radius:10px}
+.card{background:white;padding:20px;margin:10px;border-radius:10px}
+.cards{display:flex;gap:20px}
+table{width:100%;background:white;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid #ddd}
+</style>
+</head>
+
+<body>
+
+<div id="loginView" class="login">
+<div class="login-box">
+<h2>Asociados P&A</h2>
+<input placeholder="correo">
+<input type="password" placeholder="contraseña">
+<button onclick="login()">Ingresar</button>
+</div>
+</div>
+
+<div id="app" class="hidden">
+
+<div class="sidebar">
+<h2>Asociados P&A</h2>
+<button onclick="show('dashboard')">Dashboard</button>
+<button onclick="show('pedidos')">Pedidos</button>
+<button onclick="show('nuevo')">Nuevo Pedido</button>
+<button onclick="show('gastos')">Gastos</button>
+<button onclick="show('comisiones')">Comisiones</button>
+<button onclick="logout()">Cerrar sesión</button>
+</div>
+
+<div class="content">
+
+<div id="dashboard" class="page">
+<h1>Dashboard</h1>
+<div class="cards">
+<div class="card">Ingresos disponibles: <b>$0</b></div>
+<div class="card">Abonos disponibles: <b>$0</b></div>
+<div class="card">Gastos: <b>$0</b></div>
+<div class="card">Ganancia real: <b>$0</b></div>
+</div>
+</div>
+
+<div id="pedidos" class="page hidden">
+<h1>Pedidos</h1>
+<table>
+<thead>
+<tr><th>N°</th><th>Cliente</th><th>Total</th><th>Estado</th></tr>
+</thead>
+<tbody>
+<tr><td>01</td><td>Ejemplo</td><td>$0</td><td>Agendado</td></tr>
+</tbody>
+</table>
+</div>
+
+<div id="nuevo" class="page hidden">
+<h1>Nuevo Pedido</h1>
+<input placeholder="Cliente">
+<input placeholder="Teléfono">
+<select><option>Retiro</option><option>Delivery</option></select>
+<textarea placeholder="Descripción"></textarea>
+<input type="number" placeholder="Valor pedido">
+<input type="number" placeholder="Delivery">
+<input type="number" placeholder="Abono">
+<button>Guardar pedido</button>
+</div>
+
+<div id="gastos" class="page hidden">
+<h1>Registrar gasto</h1>
+<input placeholder="Descripción">
+<input type="number" placeholder="Monto">
+<button>Guardar</button>
+</div>
+
+<div id="comisiones" class="page hidden">
+<h1>Comisiones</h1>
+<div class="card">Total vendido: $0</div>
+<div class="card">Comisión 10%: $0</div>
+</div>
+
+</div>
+</div>
+
+<script>
+function login(){
+document.getElementById("loginView").classList.add("hidden")
+document.getElementById("app").classList.remove("hidden")
+}
+function logout(){location.reload()}
+function show(id){
+document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"))
+document.getElementById(id).classList.remove("hidden")
+}
+</script>
+
+</body>
+</html>
