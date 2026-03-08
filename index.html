@@ -25,14 +25,35 @@ button{width:100%;padding:10px;background:#2d6cdf;color:white;border:none;border
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
+<script>
+
 const firebaseConfig = {
   apiKey: "AIzaSyAmCk-Ca0BYPSL-9Wt-4UyqIAHhTt-7QH0",
   authDomain: "asociados-pa-sistema-1c624.firebaseapp.com",
   projectId: "asociados-pa-sistema-1c624",
-  storageBucket: "asociados-pa-sistema-1c624.firebasestorage.app",
+  storageBucket: "asociados-pa-sistema-1c624.appspot.com",
   messagingSenderId: "836387608363",
   appId: "1:836387608363:web:12c4dc20bd13765488d76e"
 };
+
+firebase.initializeApp(firebaseConfig);
+
+function login(){
+
+const email = document.getElementById("email").value;
+const pass = document.getElementById("pass").value;
+
+firebase.auth().signInWithEmailAndPassword(email,pass)
+.then(()=>{
+document.getElementById("msg").innerText="Login correcto";
+})
+.catch(e=>{
+document.getElementById("msg").innerText=e.message;
+});
+
+}
+
+</script>
 
 firebase.initializeApp(firebaseConfig);
 
