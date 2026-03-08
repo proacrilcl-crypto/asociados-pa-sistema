@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Asociados P&A - Sistema</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root{
+      --bg:#f5f7fb; --card:#fff; --line:#e5e7eb; --panel:#111827; --panel2:#1f2937;
+      --text:#111827; --muted:#6b7280; --primary:#2563eb; --secondary:#64748b; --danger:#dc2626;
+      --success:#059669; --warning:#d97706;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+    .hidden{display:none !important}
+    .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .login-card{width:100%;max-width:430px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:0 16px 40px rgba(0,0,0,.08)}
+    .login-card h1{margin:0 0 6px;font-size:34px}
+    .login-card p{margin:0 0 16px}
+    .app{display:flex;min-height:100vh}
+    .sidebar{width:250px;background:var(--panel);color:#fff;padding:18px;display:flex;flex-direction:column;gap:10px}
+    .sidebar h2{margin:0 0 4px;font-size:24px}
+    .small{font-size:12px}
+    .muted{color:var(--muted)}
+    .sidebar .muted{color:#cbd5e1}
+    .sidebar button{border:none;background:var(--panel2);color:#fff;padding:12px;border-radius:12px;cursor:pointer;text-align:left;font-size:14px}
+    .sidebar button:hover,.sidebar button.active{background:var(--primary)}
+    .sidebar .logout-btn{margin-top:auto;background:#7f1d1d}
+    .content{flex:1;padding:24px}
+    .page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:12px;flex-wrap:wrap}
+    .page-header h1,.page-header h2{margin:0}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:18px}
+    .cards.two{grid-template-columns:repeat(2,minmax(180px,1fr))}
+    .card,.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px}
+    .card h3{margin:0 0 10px;font-size:16px}
+    .card p{margin:0;font-size:28px;font-weight:700}
+    .filters,.grid-form,.mini-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;background:var(--card);border:1px solid var(--line);padding:16px;border-radius:16px;margin-bottom:16px}
+    .grid-form .full,.mini-form .full{grid-column:1/-1}
+    .filter-actions,.button-row,.inline-actions{display:flex;align-items:end;gap:10px;flex-wrap:wrap}
+    .button-row{align-items:center}
+    label{display:block;margin-bottom:6px;font-size:13px;color:var(--muted)}
+    input,select,textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:12px;font-size:14px;background:#fff}
+    textarea{min-height:90px;resize:vertical}
+    button{border:none;background:var(--primary);color:#fff;padding:11px 14px;border-radius:12px;cursor:pointer;font-size:14px}
+    button.secondary{background:var(--secondary)}
+    button.danger{background:var(--danger)}
+    .table-wrap{overflow:auto}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:12px;border-bottom:1px solid var(--line);text-align:left;font-size:14px;vertical-align:top}
+    th{white-space:nowrap}
+    .badge{display:inline-block;border:1px solid var(--line);padding:4px 8px;border-radius:999px;font-size:12px;background:#f8fafc}
+    .action-group{display:flex;gap:8px;flex-wrap:wrap}
+    .action-group button{padding:8px 10px;font-size:12px}
+    .status{margin-top:14px}
+    .ok{color:var(--success)} .warn{color:var(--warning)} .bad{color:var(--danger)}
+    .money-box{font-weight:700}
+    .summary-line{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px}
+    .summary-line span{background:#f8fafc;border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:13px}
+    .admin-only-page.hidden-by-role,.admin-only.hidden-by-role{display:none!important}
+    .hint{font-size:12px;color:var(--muted);margin-top:-6px}
+    @media(max-width:960px){
+      .sidebar{width:210px}
+    }
+    @media(max-width:720px){
+      .app{display:block}
+      .sidebar{width:auto}
+      .content{padding:16px}
+      .cards.two{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+
+<div id="loginView" class="login-wrap">
+  <div class="login-card">
+    <h1>Asociados P&A</h1>
+    <p class="muted">Sistema de gestión</p>
+    <label>Correo</label>
+    <input id="loginEmail" type="email" placeholder="admin@asociadospa.cl">
+    <label>Contraseña</label>
+    <input id="loginPassword" type="password" placeholder="••••••••">
+    <button id="loginBtn">Ingresar</button>
+    <p id="loginMsg" class="muted"></p>
+  </div>
+</div>
+
+<div id="appView" class="app hidden">
+  <aside class="sidebar">
+    <div>
+      <h2>Asociados P&A</h2>
+      <p class="small" id="userInfoLabel">Sin sesión</p>
+    </div>
+
+    <button class="nav-btn active" data-page="dashboardPage">Dashboard</button>
+    <button class="nav-btn" data-page="pedidosPage">Pedidos</button>
+    <button class="nav-btn" data-page="nuevoPedidoPage">Nuevo Pedido</button>
+    <button class="nav-btn" data-page="gastosPage" id="gastosNavBtn">Gastos</button>
+    <button class="nav-btn" data-page="comisionesPage">Comisiones</button>
+    <button class="nav-btn admin-only" data-page="vendedoresPage">Vendedores</button>
+
+    <button id="logoutBtn" class="danger logout-btn">Cerrar sesión</button>
+  </aside>
+
+  <main class="content">
+    <section id="dashboardPage" class="page">
+      <div class="page-header"><h1>Dashboard</h1></div>
+
+      <div class="cards">
+        <div class="card">
+          <h3>Ingresos disponibles</h3>
+          <p id="dashIngresos">$0</p>
+        </div>
+        <div class="card">
+          <h3>Abonos disponibles</h3>
+          <p id="dashAbonos">$0</p>
+        </div>
+        <div class="card admin-only">
+          <h3>Gastos</h3>
+          <p id="dashGastos">$0</p>
+        </div>
+        <div class="card admin-only">
+          <h3>Ganancia real</h3>
+          <p id="dashGanancia">$0</p>
+        </div>
+        <div class="card">
+          <h3>Pedidos activos</h3>
+          <p id="dashActivos">0</p>
+        </div>
+        <div class="card">
+          <h3>Pedidos del día</h3>
+          <p id="dashHoy">0</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="page-header">
+          <h2>Producción del día</h2>
+          <button id="btnIrNuevoPedido" class="secondary">Agregar pedido</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>N°</th>
+                <th>Cliente</th>
+                <th>Descripción</th>
+                <th>Estado</th>
+                <th>Fecha entrega</th>
+              </tr>
+            </thead>
+            <tbody id="tablaHoy"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="pedidosPage" class="page hidden">
+      <div class="page-header"><h1>Pedidos</h1></div>
+
+      <div class="filters">
+        <div><label>Desde</label><input id="filtroDesde" type="date"></div>
+        <div><label>Hasta</label><input id="filtroHasta" type="date"></div>
+        <div>
+          <label>Estado</label>
+          <select id="filtroEstado">
+            <option value="">Todos</option>
+            <option>Cotización</option>
+            <option>Agendado</option>
+            <option>En diseño</option>
+            <option>En producción</option>
+            <option>En traslado</option>
+            <option>Entregado</option>
+            <option>Retirado</option>
+            <option>Completado</option>
+            <option>Cancelado</option>
+          </select>
+        </div>
+        <div><label>Vendedor</label><select id="filtroVendedor"><option value="">Todos</option></select></div>
+        <div><label>Cliente</label><input id="filtroCliente" placeholder="Buscar cliente"></div>
+        <div class="filter-actions">
+          <button id="btnFiltrarPedidos">Filtrar</button>
+          <button id="btnLimpiarFiltros" class="secondary">Limpiar</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>N°</th>
+                <th>Cliente</th>
+                <th>Vendedor</th>
+                <th>Total</th>
+                <th>Abono</th>
+                <th>Saldo</th>
+                <th>Estado</th>
+                <th>Entrega</th>
+                <th>Fecha entrega</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaPedidos"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="nuevoPedidoPage" class="page hidden">
+      <div class="page-header"><h1 id="pedidoFormTitle">Nuevo Pedido</h1></div>
+
+      <form id="pedidoForm" class="grid-form">
+        <input type="hidden" id="pedidoDocId">
+
+        <div><label>Cliente</label><input id="cliente" required></div>
+        <div><label>Teléfono</label><input id="telefono"></div>
+        <div>
+          <label>Tipo de entrega</label>
+          <select id="tipoEntrega">
+            <option value="Retiro">Retiro</option>
+            <option value="Delivery">Delivery</option>
+          </select>
+        </div>
+        <div><label>Vendedor</label><select id="vendedor"></select></div>
+
+        <div class="full"><label>Dirección</label><input id="direccion"></div>
+        <div><label>Comuna</label><input id="comuna"></div>
+        <div><label>Referencia</label><input id="referencia"></div>
+
+        <div class="full"><label>Descripción del pedido</label><textarea id="descripcion" required></textarea></div>
+
+        <div><label>Fecha ingreso</label><input id="fechaIngreso" type="date" required></div>
+        <div><label>Fecha entrega</label><input id="fechaEntrega" type="date" required></div>
+        <div><label>Valor del pedido</label><input id="valorPedido" type="number" min="0" value="0"></div>
+        <div><label>Valor delivery</label><input id="valorDelivery" type="number" min="0" value="0"></div>
+        <div><label>Abono</label><input id="abono" type="number" min="0" value="0"></div>
+
+        <div>
+          <label>Estado</label>
+          <select id="estado">
+            <option>Cotización</option>
+            <option selected>Agendado</option>
+            <option>En diseño</option>
+            <option>En producción</option>
+            <option>En traslado</option>
+            <option>Entregado</option>
+            <option>Retirado</option>
+            <option>Completado</option>
+            <option>Cancelado</option>
+          </select>
+        </div>
+
+        <div><label>Total</label><input id="totalPedido" readonly></div>
+        <div><label>Saldo</label><input id="saldoPendiente" readonly></div>
+
+        <div class="full button-row">
+          <button type="submit" id="btnGuardarPedido">Guardar pedido</button>
+          <button type="button" id="btnCancelarEdicion" class="secondary hidden">Cancelar edición</button>
+        </div>
+      </form>
+      <p class="hint">Regla financiera: el abono cuenta como disponible mientras el pedido no esté finalizado. Al pasar a Entregado, Retirado o Completado, el abono deja de mostrarse aparte y el total completo del pedido pasa a Ingresos disponibles.</p>
+    </section>
+
+    <section id="gastosPage" class="page hidden admin-only-page">
+      <div class="page-header"><h1>Gastos</h1></div>
+
+      <form id="gastoForm" class="grid-form">
+        <input type="hidden" id="gastoDocId">
+        <div><label>Fecha</label><input id="gastoFecha" type="date" required></div>
+        <div><label>Descripción</label><input id="gastoDescripcion" required></div>
+        <div>
+          <label>Categoría</label>
+          <select id="gastoCategoria">
+            <option>Compra acrílico</option>
+            <option>Herramientas</option>
+            <option>Combustible</option>
+            <option>Publicidad</option>
+            <option>Pago comisiones</option>
+            <option>Otros</option>
+          </select>
+        </div>
+        <div><label>Monto</label><input id="gastoMonto" type="number" min="0" value="0" required></div>
+        <div class="full button-row">
+          <button type="submit">Guardar gasto</button>
+          <button type="button" id="btnCancelarGasto" class="secondary hidden">Cancelar</button>
+        </div>
+      </form>
+
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Descripción</th>
+                <th>Categoría</th>
+                <th>Monto</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaGastos"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="comisionesPage" class="page hidden">
+      <div class="page-header"><h1>Comisiones</h1></div>
+
+      <div class="filters">
+        <div><label>Fecha inicio</label><input id="comisionInicio" type="date"></div>
+        <div><label>Fecha fin</label><input id="comisionFin" type="date"></div>
+        <div><label>Vendedor</label><select id="comisionVendedor"><option value="">Seleccione</option></select></div>
+        <div class="filter-actions"><button id="btnCalcularComision">Calcular</button></div>
+      </div>
+
+      <div class="cards two">
+        <div class="card"><h3>Total vendido</h3><p id="comisionTotal">$0</p></div>
+        <div class="card"><h3>Comisión 10%</h3><p id="comisionMonto">$0</p></div>
+      </div>
+
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>N°</th><th>Cliente</th><th>Vendedor</th><th>Estado</th><th>Total</th></tr>
+            </thead>
+            <tbody id="tablaComisiones"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="vendedoresPage" class="page hidden admin-only-page">
+      <div class="page-header"><h1>Vendedores</h1></div>
+
+      <form id="vendedorForm" class="mini-form">
+        <input type="hidden" id="vendedorDocId">
+        <div><label>Nombre</label><input id="vendedorNombre" required></div>
+        <div>
+          <label>Activo</label>
+          <select id="vendedorActivo">
+            <option value="true">Sí</option>
+            <option value="false">No</option>
+          </select>
+        </div>
+        <div class="inline-actions">
+          <button type="submit">Guardar vendedor</button>
+          <button type="button" id="btnCancelarVendedor" class="secondary hidden">Cancelar</button>
+        </div>
+      </form>
+
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Nombre</th><th>Activo</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="tablaVendedores"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <p id="statusMsg" class="muted status"></p>
+  </main>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy, runTransaction, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAmCk-Ca0BYPSL-9Wt-4UyqIAHhTt-7QH0",
+  authDomain: "asociados-pa-sistema-1c624.firebaseapp.com",
+  projectId: "asociados-pa-sistema-1c624",
+  storageBucket: "asociados-pa-sistema-1c624.firebasestorage.app",
+  messagingSenderId: "836387608363",
+  appId: "1:836387608363:web:12c4dc20bd13765488d76e"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const FINAL_STATES = ["Entregado","Retirado","Completado"];
+const LOCKED_STATES = ["Entregado","Retirado","Completado"];
+
+let pedidos = [];
+let gastos = [];
+let vendedores = [];
+let isAdmin = false;
+
+const $ = (id) => document.getElementById(id);
+const money = (n=0) => "$" + Number(n || 0).toLocaleString("es-CL");
+const today = () => new Date().toISOString().slice(0,10);
+
+function setStatus(msg, cls="muted"){
+  const el = $("statusMsg");
+  el.className = `${cls} status`;
+  el.textContent = msg || "";
+}
+
+function switchPage(pageId){
+  document.querySelectorAll(".page").forEach(p => p.classList.add("hidden"));
+  $(pageId)?.classList.remove("hidden");
+  document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.remove("active"));
+  document.querySelector(`.nav-btn[data-page="${pageId}"]`)?.classList.add("active");
+}
+
+function setDefaultDates(){
+  if ($("fechaIngreso")) $("fechaIngreso").value = today();
+  if ($("fechaEntrega")) $("fechaEntrega").value = today();
+  if ($("gastoFecha")) $("gastoFecha").value = today();
+  if ($("comisionInicio")) $("comisionInicio").value = today().slice(0,8) + "01";
+  if ($("comisionFin")) $("comisionFin").value = today();
+}
+
+function calcPedidoForm(){
+  const valor = Number($("valorPedido").value || 0);
+  const delivery = Number($("valorDelivery").value || 0);
+  const abono = Number($("abono").value || 0);
+  const total = valor + delivery;
+  const saldo = Math.max(total - abono, 0);
+  $("totalPedido").value = total;
+  $("saldoPendiente").value = saldo;
+}
+
+function applyRoleUI(){
+  document.querySelectorAll(".admin-only,.admin-only-page").forEach(el => {
+    if (isAdmin) el.classList.remove("hidden-by-role");
+    else el.classList.add("hidden-by-role");
+  });
+  $("gastosNavBtn").style.display = isAdmin ? "block" : "none";
+}
+
+async function ensureConfigDoc(){
+  const ref = doc(db, "configuracion", "sistema");
+  const snap = await getDoc(ref);
+  if (!snap.exists()){
+    await setDoc(ref, { numeroPedidoActual: 1, comisionVendedor: 10 });
+  }
+}
+
+async function seedVendedoresIfEmpty(){
+  const col = collection(db, "vendedores");
+  const snap = await getDocs(col);
+  if (!snap.empty) return;
+  const defaults = [
+    { nombre:"Genesis", activo:true },
+    { nombre:"Vendedor 2", activo:true },
+    { nombre:"Vendedor 3", activo:true },
+    { nombre:"Vendedor 4", activo:true },
+    { nombre:"Producción", activo:true }
+  ];
+  for (const v of defaults){
+    await addDoc(col, v);
+  }
+}
+
+async function loadVendedores(){
+  const snap = await getDocs(collection(db, "vendedores"));
+  vendedores = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+  vendedores.sort((a,b) => (a.nombre||"").localeCompare(b.nombre||""));
+
+  const activos = vendedores.filter(v => v.activo !== false);
+  const options = activos.map(v => {
+    const nombre = v.nombre || v.id;
+    return `<option value="${nombre}">${nombre}</option>`;
+  }).join("");
+
+  $("vendedor").innerHTML = options || '<option value="">Sin vendedores</option>';
+  $("filtroVendedor").innerHTML = '<option value="">Todos</option>' + options;
+  $("comisionVendedor").innerHTML = '<option value="">Seleccione</option>' + options;
+
+  $("tablaVendedores").innerHTML = vendedores.map(v => `
+    <tr>
+      <td>${v.nombre || ""}</td>
+      <td>${v.activo === false ? "No" : "Sí"}</td>
+      <td>
+        <div class="action-group">
+          <button data-id="${v.id}" class="btn-edit-vendedor">Editar</button>
+          <button data-id="${v.id}" class="btn-delete-vendedor danger">Eliminar</button>
+        </div>
+      </td>
+    </tr>
+  `).join("") || '<tr><td colspan="3">Sin vendedores</td></tr>';
+
+  document.querySelectorAll(".btn-edit-vendedor").forEach(btn => btn.onclick = () => editVendedor(btn.dataset.id));
+  document.querySelectorAll(".btn-delete-vendedor").forEach(btn => btn.onclick = () => removeVendedor(btn.dataset.id));
+}
+
+async function loadPedidos(){
+  const snap = await getDocs(query(collection(db, "pedidos"), orderBy("numeroPedido", "desc")));
+  pedidos = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+  renderPedidos();
+  renderDashboard();
+}
+
+async function loadGastos(){
+  const snap = await getDocs(collection(db, "gastos"));
+  gastos = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+  renderGastos();
+  renderDashboard();
+}
+
+function renderDashboard(){
+  const ingresos = pedidos
+    .filter(p => FINAL_STATES.includes(p.estado))
+    .reduce((a,p) => a + Number(p.total || 0), 0);
+
+  const abonos = pedidos
+    .filter(p => !FINAL_STATES.includes(p.estado) && p.estado !== "Cancelado")
+    .reduce((a,p) => a + Number(p.abono || 0), 0);
+
+  const gastosTotal = gastos.reduce((a,g) => a + Number(g.monto || 0), 0);
+  const activos = pedidos.filter(p => !FINAL_STATES.includes(p.estado) && p.estado !== "Cancelado").length;
+  const pedidosHoy = pedidos.filter(p => p.fechaEntrega === today() && p.estado !== "Cancelado");
+
+  $("dashIngresos").textContent = money(ingresos);
+  $("dashAbonos").textContent = money(abonos);
+  $("dashGastos").textContent = money(gastosTotal);
+  $("dashGanancia").textContent = money((ingresos + abonos) - gastosTotal);
+  $("dashActivos").textContent = activos;
+  $("dashHoy").textContent = pedidosHoy.length;
+
+  $("tablaHoy").innerHTML = pedidosHoy.map(p => `
+    <tr>
+      <td>${String(p.numeroPedido).padStart(2,"0")}</td>
+      <td>${p.cliente || ""}</td>
+      <td>${p.descripcion || ""}</td>
+      <td><span class="badge">${p.estado || ""}</span></td>
+      <td>${p.fechaEntrega || ""}</td>
+    </tr>
+  `).join("") || '<tr><td colspan="5">Sin pedidos para hoy</td></tr>';
+}
+
+function pedidoMatchesFilters(p){
+  const desde = $("filtroDesde").value;
+  const hasta = $("filtroHasta").value;
+  const estado = $("filtroEstado").value;
+  const vendedor = $("filtroVendedor").value;
+  const cliente = $("filtroCliente").value.trim().toLowerCase();
+
+  if (desde && (p.fechaEntrega || "") < desde) return false;
+  if (hasta && (p.fechaEntrega || "") > hasta) return false;
+  if (estado && p.estado !== estado) return false;
+  if (vendedor && p.vendedor !== vendedor) return false;
+  if (cliente && !(p.cliente || "").toLowerCase().includes(cliente)) return false;
+
+  return true;
+}
+
+function renderPedidos(){
+  $("tablaPedidos").innerHTML = pedidos.filter(pedidoMatchesFilters).map(p => {
+    const locked = LOCKED_STATES.includes(p.estado);
+    return `
+      <tr>
+        <td>${String(p.numeroPedido).padStart(2,"0")}</td>
+        <td>${p.cliente || ""}</td>
+        <td>${p.vendedor || ""}</td>
+        <td>${money(p.total)}</td>
+        <td>${money(p.abono)}</td>
+        <td>${money(p.saldo)}</td>
+        <td><span class="badge">${p.estado || ""}</span></td>
+        <td>${p.tipoEntrega || ""}</td>
+        <td>${p.fechaEntrega || ""}</td>
+        <td>
+          <div class="action-group">
+            <button data-id="${p.id}" class="btn-pdf">Orden</button>
+            <button data-id="${p.id}" class="btn-edit" ${locked ? "disabled" : ""}>Editar</button>
+            <button data-id="${p.id}" class="btn-delete danger" ${locked ? "disabled" : ""}>Eliminar</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("") || '<tr><td colspan="10">Sin resultados</td></tr>';
+
+  document.querySelectorAll(".btn-edit").forEach(btn => btn.onclick = () => editPedido(btn.dataset.id));
+  document.querySelectorAll(".btn-delete").forEach(btn => btn.onclick = () => removePedido(btn.dataset.id));
+  document.querySelectorAll(".btn-pdf").forEach(btn => btn.onclick = () => downloadOrdenTrabajo(btn.dataset.id));
+}
+
+function renderGastos(){
+  if (!isAdmin){
+    $("tablaGastos").innerHTML = '<tr><td colspan="5">Solo administrador</td></tr>';
+    return;
+  }
+  $("tablaGastos").innerHTML = gastos.map(g => `
+    <tr>
+      <td>${g.fecha || ""}</td>
+      <td>${g.descripcion || ""}</td>
+      <td>${g.categoria || ""}</td>
+      <td>${money(g.monto)}</td>
+      <td>
+        <div class="action-group">
+          <button data-id="${g.id}" class="btn-edit-gasto">Editar</button>
+          <button data-id="${g.id}" class="btn-delete-gasto danger">Eliminar</button>
+        </div>
+      </td>
+    </tr>
+  `).join("") || '<tr><td colspan="5">Sin gastos</td></tr>';
+
+  document.querySelectorAll(".btn-edit-gasto").forEach(btn => btn.onclick = () => editGasto(btn.dataset.id));
+  document.querySelectorAll(".btn-delete-gasto").forEach(btn => btn.onclick = () => removeGasto(btn.dataset.id));
+}
+
+async function nextNumeroPedido(){
+  const ref = doc(db, "configuracion", "sistema");
+  return await runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()){
+      tx.set(ref, { numeroPedidoActual: 2, comisionVendedor: 10 });
+      return 1;
+    }
+    const current = Number((snap.data() || {}).numeroPedidoActual || 1);
+    tx.update(ref, { numeroPedidoActual: current + 1 });
+    return current;
+  });
+}
+
+function formPedidoData(){
+  const valorPedido = Number($("valorPedido").value || 0);
+  const valorDelivery = Number($("valorDelivery").value || 0);
+  let abono = Number($("abono").value || 0);
+  const total = valorPedido + valorDelivery;
+  let saldo = Math.max(total - abono, 0);
+  const estado = $("estado").value;
+
+  if (FINAL_STATES.includes(estado)){
+    saldo = 0;
+    abono = 0;
+  }
+
+  return {
+    cliente: $("cliente").value.trim(),
+    telefono: $("telefono").value.trim(),
+    tipoEntrega: $("tipoEntrega").value,
+    direccion: $("direccion").value.trim(),
+    comuna: $("comuna").value.trim(),
+    referencia: $("referencia").value.trim(),
+    descripcion: $("descripcion").value.trim(),
+    vendedor: $("vendedor").value,
+    fechaIngreso: $("fechaIngreso").value,
+    fechaEntrega: $("fechaEntrega").value,
+    valorPedido,
+    valorDelivery,
+    total,
+    abono,
+    saldo,
+    estado
+  };
+}
+
+function resetPedidoForm(){
+  $("pedidoForm").reset();
+  $("pedidoDocId").value = "";
+  $("pedidoFormTitle").textContent = "Nuevo Pedido";
+  $("btnCancelarEdicion").classList.add("hidden");
+  setDefaultDates();
+  $("valorPedido").value = 0;
+  $("valorDelivery").value = 0;
+  $("abono").value = 0;
+  $("estado").value = "Agendado";
+  $("tipoEntrega").value = "Retiro";
+  calcPedidoForm();
+}
+
+async function savePedido(ev){
+  ev.preventDefault();
+  const docId = $("pedidoDocId").value;
+  const data = formPedidoData();
+
+  if (!data.cliente || !data.descripcion || !data.fechaIngreso || !data.fechaEntrega){
+    setStatus("Completa los campos obligatorios del pedido.", "warn");
+    return;
+  }
+
+  try{
+    if (docId){
+      const original = pedidos.find(p => p.id === docId);
+      if (original && LOCKED_STATES.includes(original.estado)){
+        setStatus("Ese pedido ya está finalizado y no puede editarse.", "bad");
+        return;
+      }
+      await updateDoc(doc(db, "pedidos", docId), data);
+      setStatus("Pedido actualizado.", "ok");
+    } else {
+      const numeroPedido = await nextNumeroPedido();
+      await addDoc(collection(db, "pedidos"), { numeroPedido, ...data });
+      setStatus("Pedido guardado.", "ok");
+    }
+    resetPedidoForm();
+    await loadPedidos();
+    switchPage("pedidosPage");
+  }catch(err){
+    console.error(err);
+    setStatus("No se pudo guardar el pedido.", "bad");
+  }
+}
+
+function editPedido(id){
+  const p = pedidos.find(x => x.id === id);
+  if (!p) return;
+  if (LOCKED_STATES.includes(p.estado)){
+    setStatus("Ese pedido ya está finalizado y no puede editarse.", "bad");
+    return;
+  }
+  $("pedidoDocId").value = p.id;
+  $("pedidoFormTitle").textContent = `Editar Pedido ${String(p.numeroPedido).padStart(2,"0")}`;
+  $("cliente").value = p.cliente || "";
+  $("telefono").value = p.telefono || "";
+  $("tipoEntrega").value = p.tipoEntrega || "Retiro";
+  $("direccion").value = p.direccion || "";
+  $("comuna").value = p.comuna || "";
+  $("referencia").value = p.referencia || "";
+  $("descripcion").value = p.descripcion || "";
+  $("vendedor").value = p.vendedor || "";
+  $("fechaIngreso").value = p.fechaIngreso || today();
+  $("fechaEntrega").value = p.fechaEntrega || today();
+  $("valorPedido").value = p.valorPedido || 0;
+  $("valorDelivery").value = p.valorDelivery || 0;
+  $("abono").value = p.abono || 0;
+  $("estado").value = p.estado || "Agendado";
+  calcPedidoForm();
+  $("btnCancelarEdicion").classList.remove("hidden");
+  switchPage("nuevoPedidoPage");
+}
+
+async function removePedido(id){
+  const p = pedidos.find(x => x.id === id);
+  if (!p) return;
+  if (LOCKED_STATES.includes(p.estado)){
+    setStatus("Ese pedido ya está finalizado y no puede eliminarse.", "bad");
+    return;
+  }
+  if (!confirm("¿Seguro que deseas eliminar este pedido?")) return;
+  try{
+    await deleteDoc(doc(db, "pedidos", id));
+    setStatus("Pedido eliminado.", "ok");
+    await loadPedidos();
+  }catch(err){
+    console.error(err);
+    setStatus("No se pudo eliminar el pedido.", "bad");
+  }
+}
+
+function editGasto(id){
+  const g = gastos.find(x => x.id === id);
+  if (!g) return;
+  $("gastoDocId").value = g.id;
+  $("gastoFecha").value = g.fecha || today();
+  $("gastoDescripcion").value = g.descripcion || "";
+  $("gastoCategoria").value = g.categoria || "Otros";
+  $("gastoMonto").value = g.monto || 0;
+  $("btnCancelarGasto").classList.remove("hidden");
+  switchPage("gastosPage");
+}
+
+function resetGastoForm(){
+  $("gastoForm").reset();
+  $("gastoDocId").value = "";
+  $("gastoFecha").value = today();
+  $("gastoMonto").value = 0;
+  $("btnCancelarGasto").classList.add("hidden");
+}
+
+async function saveGasto(ev){
+  ev.preventDefault();
+  if (!isAdmin){
+    setStatus("Solo el administrador puede gestionar gastos.", "bad");
+    return;
+  }
+  const id = $("gastoDocId").value;
+  const data = {
+    fecha: $("gastoFecha").value,
+    descripcion: $("gastoDescripcion").value.trim(),
+    categoria: $("gastoCategoria").value,
+    monto: Number($("gastoMonto").value || 0)
+  };
+  try{
+    if (id){
+      await updateDoc(doc(db, "gastos", id), data);
+      setStatus("Gasto actualizado.", "ok");
+    } else {
+      await addDoc(collection(db, "gastos"), data);
+      setStatus("Gasto guardado.", "ok");
+    }
+    resetGastoForm();
+    await loadGastos();
+  }catch(err){
+    console.error(err);
+    setStatus("No se pudo guardar el gasto.", "bad");
+  }
+}
+
+async function removeGasto(id){
+  if (!isAdmin) return;
+  if (!confirm("¿Seguro que deseas eliminar este gasto?")) return;
+  try{
+    await deleteDoc(doc(db, "gastos", id));
+    setStatus("Gasto eliminado.", "ok");
+    await loadGastos();
+  }catch(err){
+    console.error(err);
+    setStatus("No se pudo eliminar el gasto.", "bad");
+  }
+}
+
+function calcComision(ev){
+  if (ev) ev.preventDefault();
+  const inicio = $("comisionInicio").value;
+  const fin = $("comisionFin").value;
+  const vendedor = $("comisionVendedor").value;
+
+  const filtered = pedidos.filter(p => {
+    if (!FINAL_STATES.includes(p.estado)) return false;
+    if (inicio && (p.fechaEntrega || "") < inicio) return false;
+    if (fin && (p.fechaEntrega || "") > fin) return false;
+    if (vendedor && p.vendedor !== vendedor) return false;
+    return true;
+  });
+
+  const total = filtered.reduce((a,p) => a + Number(p.total || 0), 0);
+  $("comisionTotal").textContent = money(total);
+  $("comisionMonto").textContent = money(total * 0.10);
+
+  $("tablaComisiones").innerHTML = filtered.map(p => `
+    <tr>
+      <td>${String(p.numeroPedido).padStart(2,"0")}</td>
+      <td>${p.cliente || ""}</td>
+      <td>${p.vendedor || ""}</td>
+      <td>${p.estado || ""}</td>
+      <td>${money(p.total)}</td>
+    </tr>
+  `).join("") || '<tr><td colspan="5">Sin resultados</td></tr>';
+}
+
+function editVendedor(id){
+  const v = vendedores.find(x => x.id === id);
+  if (!v) return;
+  $("vendedorDocId").value = v.id;
+  $("vendedorNombre").value = v.nombre || "";
+  $("vendedorActivo").value = v.activo === false ? "false" : "true";
+  $("btnCancelarVendedor").classList.remove("hidden");
+  switchPage("vendedoresPage");
+}
+
+function resetVendedorForm(){
+  $("vendedorForm").reset();
+  $("vendedorDocId").value = "";
+  $("vendedorActivo").value = "true";
+  $("btnCancelarVendedor").classList.add("hidden");
+}
+
+async function saveVendedor(ev){
+  ev.preventDefault();
+  if (!isAdmin){
+    setStatus("Solo el administrador puede gestionar vendedores.", "bad");
+    return;
+  }
+  const id = $("vendedorDocId").value;
+  const data = {
+    nombre: $("vendedorNombre").value.trim(),
+    activo: $("vendedorActivo").value === "true"
+  };
+  if (!data.nombre){
+    setStatus("Escribe un nombre de vendedor.", "warn");
+    return;
+  }
+  try{
+    if (id){
+      await updateDoc(doc(db, "vendedores", id), data);
+      setStatus("Vendedor actualizado.", "ok");
+    } else {
+      await addDoc(collection(db, "vendedores"), data);
+      setStatus("Vendedor guardado.", "ok");
+    }
+    resetVendedorForm();
+    await loadVendedores();
+  }catch(err){
+    console.error(err);
+    setStatus("No se pudo guardar el vendedor.", "bad");
+  }
+}
+
+async function removeVendedor(id){
+  if (!isAdmin) return;
+  if (!confirm("¿Eliminar vendedor?")) return;
+  try{
+    await deleteDoc(doc(db, "vendedores", id));
+    setStatus("Vendedor eliminado.", "ok");
+    await loadVendedores();
+  }catch(err){
+    console.error(err);
+    setStatus("No se pudo eliminar el vendedor.", "bad");
+  }
+}
+
+function downloadOrdenTrabajo(id){
+  const p = pedidos.find(x => x.id === id);
+  if (!p) return;
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF();
+
+  pdf.setFontSize(18);
+  pdf.text("Asociados P&A", 14, 18);
+  pdf.setFontSize(11);
+  pdf.text("Orden de trabajo", 14, 26);
+
+  const rows = [
+    ["Pedido", String(p.numeroPedido).padStart(2,"0")],
+    ["Cliente", p.cliente || ""],
+    ["Teléfono", p.telefono || ""],
+    ["Vendedor", p.vendedor || ""],
+    ["Tipo de entrega", p.tipoEntrega || ""],
+    ["Dirección", p.direccion || ""],
+    ["Comuna", p.comuna || ""],
+    ["Referencia", p.referencia || ""],
+    ["Descripción", p.descripcion || ""],
+    ["Fecha ingreso", p.fechaIngreso || ""],
+    ["Fecha entrega", p.fechaEntrega || ""],
+    ["Valor pedido", money(p.valorPedido)],
+    ["Delivery", money(p.valorDelivery)],
+    ["Total", money(p.total)],
+    ["Abono", money(p.abono)],
+    ["Saldo", money(p.saldo)],
+    ["Estado", p.estado || ""]
+  ];
+
+  let y = 38;
+  rows.forEach(([k,v]) => {
+    const lines = pdf.splitTextToSize(`${k}: ${v}`, 180);
+    pdf.text(lines, 14, y);
+    y += lines.length * 7;
+  });
+
+  pdf.save(`orden-trabajo-${String(p.numeroPedido).padStart(2,"0")}.pdf`);
+}
+
+async function login(){
+  const email = $("loginEmail").value.trim();
+  const password = $("loginPassword").value;
+  if (!email || !password){
+    $("loginMsg").textContent = "Completa correo y contraseña.";
+    return;
+  }
+  try{
+    await signInWithEmailAndPassword(auth, email, password);
+    $("loginMsg").textContent = "";
+  }catch(err){
+    console.error(err);
+    $("loginMsg").textContent = "No se pudo iniciar sesión. Revisa correo y contraseña.";
+  }
+}
+
+async function initApp(user){
+  isAdmin = (user.email || "").toLowerCase() === "admin@asociadospa.cl";
+  $("userInfoLabel").textContent = `${user.email} · ${isAdmin ? "Administrador" : "Usuario"}`;
+  applyRoleUI();
+  await ensureConfigDoc();
+  await seedVendedoresIfEmpty();
+  await loadVendedores();
+  await loadPedidos();
+  await loadGastos();
+  setDefaultDates();
+  resetPedidoForm();
+  resetGastoForm();
+  resetVendedorForm();
+  switchPage("dashboardPage");
+}
+
+function bind(){
+  document.querySelectorAll(".nav-btn").forEach(btn => btn.onclick = () => switchPage(btn.dataset.page));
+  $("loginBtn").onclick = login;
+  $("logoutBtn").onclick = async () => signOut(auth);
+  $("btnIrNuevoPedido").onclick = () => switchPage("nuevoPedidoPage");
+  $("pedidoForm").addEventListener("submit", savePedido);
+  $("gastoForm").addEventListener("submit", saveGasto);
+  $("vendedorForm").addEventListener("submit", saveVendedor);
+  $("btnCancelarEdicion").onclick = () => { resetPedidoForm(); switchPage("pedidosPage"); };
+  $("btnCancelarGasto").onclick = resetGastoForm;
+  $("btnCancelarVendedor").onclick = resetVendedorForm;
+  ["valorPedido","valorDelivery","abono"].forEach(id => $(id).addEventListener("input", calcPedidoForm));
+  $("btnFiltrarPedidos").onclick = renderPedidos;
+  $("btnLimpiarFiltros").onclick = () => {
+    $("filtroDesde").value = "";
+    $("filtroHasta").value = "";
+    $("filtroEstado").value = "";
+    $("filtroVendedor").value = "";
+    $("filtroCliente").value = "";
+    renderPedidos();
+  };
+  $("btnCalcularComision").onclick = calcComision;
+}
+
+onAuthStateChanged(auth, async user => {
+  if (user){
+    $("loginView").classList.add("hidden");
+    $("appView").classList.remove("hidden");
+    await initApp(user);
+  } else {
+    $("loginView").classList.remove("hidden");
+    $("appView").classList.add("hidden");
+  }
+});
+
+bind();
+setDefaultDates();
+calcPedidoForm();
+</script>
+</body>
+</html>
