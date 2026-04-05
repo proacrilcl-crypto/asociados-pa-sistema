@@ -53,7 +53,7 @@
     .image-preview-box.visible{display:block}
     .image-preview-box img{max-width:210px;max-height:140px;border:1px solid var(--line);border-radius:12px;display:block}
     .image-preview-actions{display:flex;gap:8px;align-items:center;margin-top:8px}
-    .small-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}.small-card h4{margin:0 0 8px;font-size:14px}.small-card p{margin:0;font-size:22px;font-weight:700}.section-title{margin:18px 0 10px;font-size:18px}.period-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.period-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:#f8fafc;font-size:13px;font-weight:700}.modal-backdrop{position:fixed;inset:0;background:rgba(17,24,39,.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:1000}.modal-backdrop.visible{display:flex}.modal-card{width:min(920px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:20px;padding:20px;border:1px solid var(--line);box-shadow:0 20px 50px rgba(0,0,0,.25)}.modal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.modal-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}.page-note{font-size:12px;color:var(--muted);margin:-4px 0 10px}
+    .small-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}.small-card h4{margin:0 0 8px;font-size:14px}.small-card p{margin:0;font-size:22px;font-weight:700}.section-title{margin:18px 0 10px;font-size:18px}.period-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.period-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:#f8fafc;font-size:13px;font-weight:700}.modal-backdrop{position:fixed;inset:0;background:rgba(17,24,39,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:1000}.modal-backdrop.visible{display:flex}.modal-card{width:min(920px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:18px;padding:20px;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.22)}.modal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}.modal-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}.page-note{font-size:12px;color:var(--muted);margin:-4px 0 10px}
 
     /* Mejor visual solo para la sección Pedidos */
     #pedidosPage .filters{grid-template-columns:1fr 1fr .95fr .95fr .9fr 1.2fr auto;align-items:end}
@@ -126,14 +126,14 @@
 
   <main class="content">
     <section id="dashboardPage" class="page">
-      <div class="page-header"><h1>Dashboard</h1><div class="period-tools"><span class="period-badge">Período: <span id="periodoActualLabel">-</span></span><select id="selectorPeriodo"></select><button id="btnNuevoPeriodo" type="button">Crear nuevo período</button></div></div><p class="page-note">Los valores iniciales solo se ingresan al crear el nuevo período. Luego quedan bloqueados. Los pedidos abiertos se trasladan automáticamente al nuevo período.</p>
+      <div class="page-header"><h1>Dashboard</h1><div class="period-tools"><span class="period-badge">Período: <span id="periodoActualLabel">-</span></span><select id="selectorPeriodo"></select><button id="btnNuevoPeriodo" type="button">Crear nuevo período</button></div></div><p class="page-note">Los valores iniciales solo se ingresan al crear el nuevo período. Después quedan bloqueados. Los pedidos abiertos pasan automáticamente al nuevo período.</p>
       <div class="cards">
         <div class="card"><h3>Ingresos disponibles</h3><p id="dashIngresos">$0</p></div>
         <div class="card"><h3>Abonos disponibles</h3><p id="dashAbonos">$0</p></div>
         <div class="card admin-only"><h3>IVA compras</h3><p id="dashIvaCompras">$0</p></div>
         <div class="card admin-only"><h3>IVA ventas</h3><p id="dashIvaVentas">$0</p></div>
         <div class="card admin-only"><h3>Balance IVA SII</h3><p id="dashIvaSii">$0</p></div>
-        <div class="card"><h3>IVA cobrado</h3><p id="dashIva">$0</p></div>
+        <div class="card"><h3>IVA acumulado</h3><p id="dashIva">$0</p></div>
         <div class="card admin-only"><h3>Gastos</h3><p id="dashGastos">$0</p></div>
         <div class="card admin-only"><h3>Ganancia real</h3><p id="dashGanancia">$0</p></div>
         <div class="card"><h3>Pedidos activos</h3><p id="dashActivos">0</p></div>
@@ -327,7 +327,7 @@
     <div id="periodModal" class="modal-backdrop hidden">
       <div class="modal-card">
         <div class="page-header"><h2>Crear nuevo período</h2></div>
-        <p class="page-note">Aquí defines manualmente los montos iniciales del nuevo período. Después de crearlo, estos valores no se podrán editar.</p>
+        <p class="page-note">Completa manualmente los valores iniciales. Al confirmar, se crea el nuevo período y se trasladan automáticamente los pedidos abiertos.</p>
         <div class="modal-grid">
           <div><label>Código del período</label><input id="nuevoPeriodoCodigo" placeholder="2026-05"></div>
           <div><label>Nombre visible</label><input id="nuevoPeriodoNombre" placeholder="Mayo 2026"></div>
@@ -369,76 +369,17 @@ const IVA_ACTIVE_STATES = ["Agendado","En diseño","En producción","En traslado
 let pedidos = [];
 let gastos = [];
 let vendedores = [];
-let periodos = [];
 let numeroActual = 1;
 let isAdmin = false;
 let currentUser = null;
 let db = null;
 let auth = null;
 let cloudReady = false;
-let currentPeriodo = '';
 
 const $ = (id) => document.getElementById(id);
-const money = (n=0) => "$" + Math.round(Number(n || 0)).toLocaleString("es-CL");
+const money = (n=0) => "$" + Number(n || 0).toLocaleString("es-CL");
 const today = () => new Date().toISOString().slice(0,10);
 const getSelectedEstados = () => Array.from(document.querySelectorAll('.estado-check:checked')).map(el => el.value);
-const CLOSED_ORDER_STATES = ['Entregado','Retirado','Cancelado'];
-
-function defaultPeriodoCode(){
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-}
-function getPedidoPeriodo(p){
-  return p.periodo || currentPeriodo;
-}
-function getGastoPeriodo(g){
-  return g.periodo || currentPeriodo;
-}
-function getPeriodoConfig(periodo){
-  return periodos.find(p => p.codigo === periodo) || null;
-}
-function periodoLabel(periodo){
-  const config = getPeriodoConfig(periodo);
-  if (config?.nombre) return config.nombre;
-  return periodo || '-';
-}
-function renderPeriodUI(){
-  const setCodes = new Set([currentPeriodo, ...periodos.map(p => p.codigo).filter(Boolean), ...pedidos.map(p => p.periodo).filter(Boolean), ...gastos.map(g => g.periodo).filter(Boolean)]);
-  const options = [...setCodes].filter(Boolean).sort();
-  if ($('selectorPeriodo')) $('selectorPeriodo').innerHTML = options.map(code => `<option value="${code}" ${code===currentPeriodo?'selected':''}>${periodoLabel(code)}</option>`).join('');
-  if ($('periodoActualLabel')) $('periodoActualLabel').textContent = periodoLabel(currentPeriodo);
-}
-function getCurrentPeriodoPedidos(){
-  return pedidos.filter(p => getPedidoPeriodo(p) === currentPeriodo);
-}
-function getCurrentPeriodoGastos(){
-  return gastos.filter(g => getGastoPeriodo(g) === currentPeriodo);
-}
-function resetPeriodModal(){
-  $('nuevoPeriodoCodigo').value = '';
-  $('nuevoPeriodoNombre').value = '';
-  $('periodSaldoInicial').value = 0;
-  $('periodIngresos').value = 0;
-  $('periodAbonos').value = 0;
-  $('periodGastos').value = 0;
-  $('periodIvaCompras').value = 0;
-  $('periodIvaVentas').value = 0;
-  $('periodIvaCobrado').value = 0;
-  $('periodIvaSii').value = 0;
-  $('periodGanancia').value = 0;
-}
-function openPeriodModal(){
-  resetPeriodModal();
-  const d = new Date();
-  d.setMonth(d.getMonth()+1);
-  $('nuevoPeriodoCodigo').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-  $('periodModal').classList.remove('hidden');
-  $('periodModal').classList.add('visible');
-}
-function closePeriodModal(){
-  $('periodModal').classList.remove('visible');
-  $('periodModal').classList.add('hidden');
-}
 
 function setStatus(msg, cls="muted"){
   const el = $("statusMsg");
@@ -506,7 +447,7 @@ async function ensureInitialData(){
     for (const v of base) await addDoc(collection(db, 'vendedores'), v);
   }
   const perSnap = await getDocs(collection(db, 'periodos'));
-  if (perSnap.empty){
+  if (perSnap.empty) {
     await setDoc(doc(db, 'periodos', defaultPeriodoCode()), {
       codigo: defaultPeriodoCode(),
       nombre: defaultPeriodoCode(),
@@ -611,9 +552,9 @@ function loadVendedoresUI(){
   document.querySelectorAll('.btn-delete-vendedor').forEach(b => b.onclick = () => removeVendedor(b.dataset.id));
 }
 function renderDashboard(){
-  const cfg = getPeriodoConfig(currentPeriodo) || {};
-  const pedidosPeriodo = getCurrentPeriodoPedidos();
-  const gastosPeriodo = getCurrentPeriodoGastos();
+  const cfg = periodos.find(p => p.codigo === currentPeriodo) || {};
+  const pedidosPeriodo = pedidos.filter(p => getPedidoPeriodo(p) === currentPeriodo);
+  const gastosPeriodo = gastos.filter(g => getGastoPeriodo(g) === currentPeriodo);
 
   const ingresosLive = pedidosPeriodo.filter(p => INCOME_STATES.includes(p.estado)).reduce((a,p) => a + Number(p.total||0), 0);
   const abonosLive = pedidosPeriodo.filter(p => !NON_ABONO_STATES.includes(p.estado)).reduce((a,p) => a + Number(p.abono||0), 0);
@@ -629,7 +570,6 @@ function renderDashboard(){
   const gastosLive = gastosPeriodo.reduce((a,g) => a + Number(g.monto||0), 0);
   const ivaComprasLive = Math.round(gastosPeriodo.reduce((a,g) => a + Number(g.ivaMonto||0), 0));
 
-  const saldoInicial = Number(cfg.saldoInicial || 0);
   const ingresos = Number(cfg.ingresosIniciales || 0) + ingresosLive;
   const abonos = Number(cfg.abonosIniciales || 0) + abonosLive;
   const ivaVentas = Number(cfg.ivaVentasIniciales || 0) + ivaVentasLive;
@@ -639,7 +579,7 @@ function renderDashboard(){
   const ivaSii = Number(cfg.ivaSiiInicial || 0) + (ivaCobradoLive - ivaComprasLive);
   const activos = pedidosPeriodo.filter(p => !NON_ABONO_STATES.includes(p.estado)).length;
   const pedidosHoy = pedidosPeriodo.filter(p => p.fechaEntrega === today() && p.estado !== 'Cancelado');
-  const gananciaReal = Number(cfg.gananciaInicial || 0) + saldoInicial + ingresosLive + abonosLive - gastosLive;
+  const gananciaReal = Number(cfg.gananciaInicial || 0) + Number(cfg.saldoInicial || 0) + ingresosLive + abonosLive - gastosLive;
 
   $('dashIngresos').textContent = money(ingresos);
   $('dashAbonos').textContent = money(abonos);
@@ -1318,20 +1258,16 @@ async function createNewPeriod(){
     createdAt: today()
   };
 
-  const pedidosActuales = getCurrentPeriodoPedidos();
-  const gastosActuales = getCurrentPeriodoGastos();
-  const abiertos = pedidosActuales.filter(p => !CLOSED_ORDER_STATES.includes(p.estado));
-  const cerrados = pedidosActuales.filter(p => CLOSED_ORDER_STATES.includes(p.estado));
+  const pedidosPeriodo = pedidos.filter(p => getPedidoPeriodo(p) === currentPeriodo);
+  const gastosPeriodo = gastos.filter(g => getGastoPeriodo(g) === currentPeriodo);
+  const abiertos = pedidosPeriodo.filter(p => !CLOSED_ORDER_STATES.includes(p.estado));
 
   try {
     await setDoc(doc(db,'periodos',codigo), cfg, { merge: true });
-
     await Promise.all([
-      ...cerrados.map(p => updateDoc(doc(db,'pedidos',p.id), { periodo: currentPeriodo })),
       ...abiertos.map(p => updateDoc(doc(db,'pedidos',p.id), { periodo: codigo })),
-      ...gastosActuales.map(g => updateDoc(doc(db,'gastos',g.id), { periodo: currentPeriodo }))
+      ...gastosPeriodo.map(g => updateDoc(doc(db,'gastos',g.id), { periodo: currentPeriodo }))
     ]);
-
     await setDoc(doc(db,'sistema','meta'), { currentPeriodo: codigo }, { merge: true });
     currentPeriodo = codigo;
     closePeriodModal();
