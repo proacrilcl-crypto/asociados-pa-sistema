@@ -86,15 +86,24 @@
   </style>
 
   <script type="module">
-    window.APP_FIREBASE_CONFIG = {
-      apiKey: "AIzaSyDGg6nG-IfwqSGdGqOTQ6ocEQb3B1Q0nyU",
-      authDomain: "asociados-pa-sistema-7c8a6.firebaseapp.com",
-      projectId: "asociados-pa-sistema-7c8a6",
-      storageBucket: "asociados-pa-sistema-7c8a6.firebasestorage.app",
-      messagingSenderId: "636245928794",
-      appId: "1:636245928794:web:eaa72dad744de198c06163"
-    };
-  </script>
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDGg6nG-IfwqSGdGqOTQ6ocEQb3B1Q0nyU",
+  authDomain: "asociados-pa-sistema-7c8a6.firebaseapp.com",
+  projectId: "asociados-pa-sistema-7c8a6",
+  storageBucket: "asociados-pa-sistema-7c8a6.firebasestorage.app",
+  messagingSenderId: "636245928794",
+  appId: "1:636245928794:web:eaa72dad744de198c06163"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+window.auth = auth;
+window.APP_FIREBASE_CONFIG = firebaseConfig;
+</script>
 
 </head>
 <body>
