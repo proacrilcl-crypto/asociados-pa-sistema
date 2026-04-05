@@ -384,10 +384,16 @@ function getGlobalDateRange(){
   const end = $('globalHasta')?.value || '';
   return { start, end, active: Boolean(start || end) };
 }
+function getPedidoFilterDate(p){
+  return p.fechaIngreso || p.fechaEntrega || '';
+}
+function getGastoFilterDate(g){
+  return g.fecha || '';
+}
 function inGlobalRange(fecha){
-  if (!fecha) return false;
   const { start, end, active } = getGlobalDateRange();
   if (!active) return true;
+  if (!fecha) return true;
   if (start && fecha < start) return false;
   if (end && fecha > end) return false;
   return true;
@@ -555,8 +561,8 @@ function loadVendedoresUI(){
   document.querySelectorAll('.btn-delete-vendedor').forEach(b => b.onclick = () => removeVendedor(b.dataset.id));
 }
 function renderDashboard(){
-  const pedidosFiltrados = pedidos.filter(p => inGlobalRange(p.fechaIngreso || p.fechaEntrega || ''));
-  const gastosFiltrados = gastos.filter(g => inGlobalRange(g.fecha || ''));
+  const pedidosFiltrados = pedidos.filter(p => inGlobalRange(getPedidoFilterDate(p)));
+  const gastosFiltrados = gastos.filter(g => inGlobalRange(getGastoFilterDate(g)));
   const ingresos = pedidosFiltrados.filter(p => INCOME_STATES.includes(p.estado)).reduce((a,p) => a + Number(p.total||0), 0);
   const abonos = pedidosFiltrados.filter(p => !NON_ABONO_STATES.includes(p.estado)).reduce((a,p) => a + Number(p.abono||0), 0);
 
@@ -604,7 +610,7 @@ function renderDashboard(){
   `).join('') || '<tr><td colspan="5">Sin pedidos para hoy</td></tr>';
 }
 function pedidoMatchesFilters(p){
-  if (!inGlobalRange(p.fechaIngreso || p.fechaEntrega || '')) return false;
+  if (!inGlobalRange(getPedidoFilterDate(p))) return false;
   const desde = $('filtroDesde').value, hasta = $('filtroHasta').value, vendedor = $('filtroVendedor').value;
   const filtroAbono = $('filtroAbono').value;
   const busqueda = $('filtroCliente').value.trim().toLowerCase();
@@ -684,7 +690,7 @@ function renderPedidos(){
 }
 function renderGastos(){
   if (!isAdmin){ $('tablaGastos').innerHTML = '<tr><td colspan="5">Solo administrador</td></tr>'; return; }
-  const gastosOrdenados = [...gastos].filter(g => inGlobalRange(g.fecha || '')).sort((a,b) => {
+  const gastosOrdenados = [...gastos].filter(g => inGlobalRange(getGastoFilterDate(g))).sort((a,b) => {
     const fechaComp = String(b.fecha || '').localeCompare(String(a.fecha || ''));
     if (fechaComp !== 0) return fechaComp;
     return String(b.id || '').localeCompare(String(a.id || ''));
@@ -846,7 +852,7 @@ async function removeGasto(id){
 }
 function calcComision(){
   const inicio = $('comisionInicio').value, fin = $('comisionFin').value, vendedor = $('comisionVendedor').value;
-  const filtered = pedidos.filter(p => INCOME_STATES.includes(p.estado) && inGlobalRange(p.fechaEntrega || p.fechaIngreso || '') && (!inicio || p.fechaEntrega >= inicio) && (!fin || p.fechaEntrega <= fin) && (!vendedor || p.vendedor === vendedor));
+  const filtered = pedidos.filter(p => INCOME_STATES.includes(p.estado) && inGlobalRange(getPedidoFilterDate(p)) && (!inicio || p.fechaEntrega >= inicio) && (!fin || p.fechaEntrega <= fin) && (!vendedor || p.vendedor === vendedor));
   const total = filtered.reduce((a,p)=>a+Number(p.total||0),0);
   $('comisionTotal').textContent = money(total);
   $('comisionMonto').textContent = money(total * 0.10);
@@ -1165,7 +1171,7 @@ function getReportePedidosFiltrados(){
   const hasta = $('reporteHasta')?.value || '';
   const vendedor = $('reporteVendedor')?.value || '';
   return pedidos.filter(p => {
-    const fecha = p.fechaIngreso || p.fechaEntrega || '';
+    const fecha = getPedidoFilterDate(p);
     if (!inGlobalRange(fecha)) return false;
     if (desde && fecha < desde) return false;
     if (hasta && fecha > hasta) return false;
