@@ -87,7 +87,10 @@
 
   <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC1-ZVy_aFu9jMWyVosbDNF7VQyglR0QU4"
@@ -380,9 +383,9 @@ async function initCloud(){
       return;
     }
     const app = initializeApp(cfg);
-    db = getFirestore(app);
-    auth = getAuth(app);
-    cloudReady = true;
+auth = getAuth(app);
+db = getFirestore(app);
+cloudReady = true;
 
     onAuthStateChanged(auth, async (user) => {
       try {
